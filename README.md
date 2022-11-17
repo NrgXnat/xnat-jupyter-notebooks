@@ -8,7 +8,7 @@ You will also find notebooks used for the Jupyter demonstration during the XNAT 
 
 After you **Start Jupyter** from XNAT, start a terminal from within JupyterLab.
 
-Your workspace directory is available at /workspace/{username}.
+Your workspace directory is available at **/workspace/{username}**.
 
 ```shell
 cd $JUPYTERHUB_ROOT_DIR
