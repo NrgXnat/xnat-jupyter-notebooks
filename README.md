@@ -21,3 +21,13 @@ git clone https://github.com/NrgXnat/xnat-jupyter-notebooks.git
 ```
 
 After cloning checkout the sample notebook for a overview of the XNAT/Jupyter environmental variables, naviagting the XNAT file system, and converting stored searches to pandas DataFrames.
+
+
+## XNAT Workshop in London
+Notebooks from the Jupyter demonstration at the XNAT Workshop in London are also availble. 
+
+#### MedNIST
+
+The MedNIST medical image classification tutorial is an introductory MONAI tutorial introducing an end-to-end training and evaulation example. 
+
+The Docker image `xnat/monai-notebook:0.3.0` can be used with this example.
