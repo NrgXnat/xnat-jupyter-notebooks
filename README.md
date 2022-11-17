@@ -20,4 +20,4 @@ This is where you should store any Jupyter notebooks. **Notebooks stored here wi
 git clone https://github.com/NrgXnat/xnat-jupyter-notebooks.git
 ```
 
-After cloning checkout the sample notebook for a overview of the XNAT/Jupyter environmental variables and the XNAT file system.
+After cloning checkout the sample notebook for a overview of the XNAT/Jupyter environmental variables, naviagting the XNAT file system, and converting stored searches to pandas DataFrames.
