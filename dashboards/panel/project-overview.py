@@ -67,44 +67,13 @@ histogram_age.opts(width=500, height=300)
 genders = get_subject_data()['gender'].value_counts()
 fig = px.pie(df, values=genders.values, names=genders.index)
 
-## Card for basic project information
-project_card = pn.Card(
-    pn.pane.Markdown(f"**Project ID:** {project_id}"),
-    pn.pane.Markdown(f"**Subject Count:** {len(project.subjects)}"),
-    pn.pane.Markdown(f"**Experiment Count:** {len(project.experiments)}"),
-    title='Project Information',
-    collapsible=False,
-    sizing_mode="stretch_width",
+app = pn.Column(
+    pn.pane.Markdown(f"# Subject demographics for project {project_id}"),
+    df_pane,
+    histogram_age,
+    fig,
+    sizing_mode="stretch_both",
+    max_height=500
 )
 
-# Create template/layout
-template = pn.template.BootstrapTemplate(
-    title=f"XNAT Panel App for Project {project_id}",
-    busy_indicator=pn.indicators.BooleanStatus(value=False)
-)
-
-# Add content
-template.main.append(
-    pn.Column(
-        pn.pane.Markdown(f"### Subject Data"),
-        df_pane,
-        pn.Row(
-            pn.Column(
-                pn.pane.Markdown(f"### Subject Age Distribution"),
-                histogram_age
-            ),
-            pn.Column(
-                pn.pane.Markdown(f"### Gender Distribution"),
-                fig
-            )
-        )
-    )
-)
-
-# Add sidebar
-template.sidebar.append(
-    project_card
-)
-
-template.servable()
-template
+app.servable()
