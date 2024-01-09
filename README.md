@@ -21,3 +21,7 @@ git clone https://github.com/NrgXnat/xnat-jupyter-notebooks.git
 ```
 
 After cloning checkout the sample notebook for a overview of the XNAT/Jupyter environmental variables, naviagting the XNAT file system, and converting stored searches to pandas DataFrames. There is also a introductory MONAI image classification tutorial using the MedNIST dataset.
+
+## Dashboards
+
+The `dashboards` directory contains a few simple dashboards for use with Dash, Panel, Streamlit, and Voila. They can be deployed with the XNAT JupyterHub integration plugin and the xnat/datascience-notebook image.
