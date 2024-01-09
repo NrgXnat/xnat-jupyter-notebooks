@@ -1,12 +1,10 @@
-import os
-
-import numpy as np
+import panel as pn
+import os 
 import pandas as pd
 import xnat
 
-import hvplot.pandas
-import panel as pn
 import plotly.express as px
+import hvplot.pandas
 
 pn.extension('plotly')
 
@@ -15,24 +13,13 @@ xnat_host = os.getenv('XNAT_HOST')
 xnat_user = os.getenv('XNAT_USER')
 xnat_password = os.getenv('XNAT_PASS')
 
-if os.environ['XNAT_XSI_TYPE'] != 'xnat:projectData':
-    raise Exception('Must be started from an XNAT project.')
+project_id = os.environ['XNAT_ITEM_ID']
 
-project_id = os.getenv('XNAT_ITEM_ID')
-
-connection = xnat.connect(xnat_host, user=xnat_user, password=xnat_password)
+connection = xnat.connect(xnat_host, user=xnat_user, password=xnat_password, loglevel='INFO')
 project = connection.projects[project_id]
 
-# Cache for subject data
-subject_data_cache = None
+def load_subject_data():
 
-# Compile subject data or return cached data
-def get_subject_data():
-    global subject_data_cache
-    
-    if subject_data_cache is not None:
-        return subject_data_cache
-    
     subject_data = {
         'id': [],
         'gender': [],
@@ -43,51 +30,56 @@ def get_subject_data():
         subject_data['id'].append(subject.label)
         subject_data['gender'].append(subject.demographics.gender)
         subject_data['age'].append(subject.demographics.age)
-        
-    df = pd.DataFrame(subject_data)
-    
-    subject_data_cache = df
 
-    return df
+    return subject_data
 
 
 # Panel setup
-pn.extension(design='material')
-
-# Subject data table
-df = get_subject_data()
-df_pane = pn.pane.DataFrame(df, sizing_mode="stretch_both", max_height=500)
-
-# Histogram of age distribution
-histogram_age = df.hvplot.hist('age', bins=15, height=300)
-histogram_age.opts(xlabel='Age', ylabel='Count')
-histogram_age.opts(width=500, height=300)
-
-# Create pie chart of gender distribution m vs f
-genders = get_subject_data()['gender'].value_counts()
-fig = px.pie(df, values=genders.values, names=genders.index)
-
-## Card for basic project information
-project_card = pn.Card(
-    pn.pane.Markdown(f"**Project ID:** {project_id}"),
-    pn.pane.Markdown(f"**Subject Count:** {len(project.subjects)}"),
-    pn.pane.Markdown(f"**Experiment Count:** {len(project.experiments)}"),
-    title='Project Information',
-    collapsible=False,
-    sizing_mode="stretch_width",
-)
-
-# Create template/layout
 template = pn.template.BootstrapTemplate(
-    title=f"XNAT Panel App for Project {project_id}",
+    title=f'Project Overview for {project_id}',
     busy_indicator=pn.indicators.BooleanStatus(value=False)
 )
 
-# Add content
+loading = pn.indicators.LoadingSpinner(value=False, width=100, height=100,visible=False)
+main_column = pn.Column(loading)
+
 template.main.append(
-    pn.Column(
-        pn.pane.Markdown(f"### Subject Data"),
-        df_pane,
+    pn.Row(
+        main_column,
+        sizing_mode="stretch_both",
+    )
+)
+
+#function to activate / deactivate loading widget      
+def load_display(x):
+    if(x=='on'):
+        loading.value=True
+        loading.visible=True
+    if(x=='off'):
+        loading.value=False
+        loading.visible=False
+
+def display_subject_data():
+    load_display('on')
+
+    subject_data = load_subject_data()
+    df = pd.DataFrame(subject_data)
+    df_pane = pn.pane.DataFrame(df, sizing_mode="stretch_both", max_height=250)
+
+    title = pn.pane.Markdown("### Subjects")
+    main_column.append(title)
+    main_column.append(df_pane)
+
+    # Histogram of age distribution
+    histogram_age = df.hvplot.hist('age', bins=15, height=300)
+    histogram_age.opts(xlabel='Age', ylabel='Count')
+    histogram_age.opts(width=500, height=300)
+
+    # Create pie chart of gender distribution m vs f
+    genders = df['gender'].value_counts()
+    fig = px.pie(df, values=genders.values, names=genders.index)
+
+    main_column.append(
         pn.Row(
             pn.Column(
                 pn.pane.Markdown(f"### Subject Age Distribution"),
@@ -99,12 +91,9 @@ template.main.append(
             )
         )
     )
-)
 
-# Add sidebar
-template.sidebar.append(
-    project_card
-)
+    load_display('off')
+
+pn.state.onload(display_subject_data)
 
 template.servable()
-template
