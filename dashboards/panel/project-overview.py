@@ -33,67 +33,57 @@ def load_subject_data():
 
     return subject_data
 
+container = pn.Column()
 
-# Panel setup
-template = pn.template.BootstrapTemplate(
-    title=f'Project Overview for {project_id}',
-    busy_indicator=pn.indicators.BooleanStatus(value=False)
+title = pn.pane.Markdown(
+    f"# Project Overview for {project_id}",
 )
 
-loading = pn.indicators.LoadingSpinner(value=False, width=100, height=100,visible=False)
-main_column = pn.Column(loading)
-
-template.main.append(
-    pn.Row(
-        main_column,
-        sizing_mode="stretch_both",
-    )
+title_row = pn.Row(
+    title,
 )
 
-#function to activate / deactivate loading widget      
-def load_display(x):
-    if(x=='on'):
-        loading.value=True
-        loading.visible=True
-    if(x=='off'):
-        loading.value=False
-        loading.visible=False
+container.append(title_row)
+
+inner = pn.Column()
+
+loading = pn.pane.Markdown("Loading...")
+inner.append(loading)
+
+container.append(inner)
 
 def display_subject_data():
-    load_display('on')
+
+    # subject_data = load_subject_data()
+
+    loading.object = "Loading subject data..."
 
     subject_data = load_subject_data()
-    df = pd.DataFrame(subject_data)
-    df_pane = pn.pane.DataFrame(df, sizing_mode="stretch_both", max_height=250)
 
-    title = pn.pane.Markdown("### Subjects")
-    main_column.append(title)
-    main_column.append(df_pane)
+    loading.object = "### Subjects"
+
+    df = pd.DataFrame(subject_data)
+    df_pane = pn.pane.DataFrame(df, max_rows=15)
+
+    inner.append(df_pane)
 
     # Histogram of age distribution
+    inner.append(pn.pane.Markdown(f"### Subject Age Distribution"))
+    
     histogram_age = df.hvplot.hist('age', bins=15, height=300)
     histogram_age.opts(xlabel='Age', ylabel='Count')
     histogram_age.opts(width=500, height=300)
-
+    
+    inner.append(histogram_age)
+    
     # Create pie chart of gender distribution m vs f
+    inner.append(pn.pane.Markdown(f"### Gender Distribution"))
+    
     genders = df['gender'].value_counts()
-    fig = px.pie(df, values=genders.values, names=genders.index)
-
-    main_column.append(
-        pn.Row(
-            pn.Column(
-                pn.pane.Markdown(f"### Subject Age Distribution"),
-                histogram_age
-            ),
-            pn.Column(
-                pn.pane.Markdown(f"### Gender Distribution"),
-                fig
-            )
-        )
-    )
-
-    load_display('off')
-
+    genders_fig = px.pie(df, values=genders.values, names=genders.index)
+    
+    inner.append(genders_fig)
+    
 pn.state.onload(display_subject_data)
 
-template.servable()
+container.servable()
