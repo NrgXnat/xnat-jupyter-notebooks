@@ -6,7 +6,7 @@ import xnat
 import plotly.express as px
 import hvplot.pandas
 
-pn.extension('plotly')
+pn.extension('plotly', defer_load=True, loading_indicator=True)
 
 # XNAT setup
 xnat_host = os.getenv('XNAT_HOST')
