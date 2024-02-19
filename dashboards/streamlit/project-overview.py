@@ -1,10 +1,10 @@
-import pandas
-import numpy
+import pandas as pd
 import streamlit as st
 import xnat
 import os
 import plotly.express as px
 import matplotlib.pyplot as plt
+import base64
 
 # XNAT Setup
 xnat_host = os.getenv('XNAT_HOST')
@@ -19,35 +19,19 @@ project_id = os.getenv('XNAT_ITEM_ID')
 connection = xnat.connect(xnat_host, user=xnat_user, password=xnat_password)
 project = connection.projects[project_id]
 
-# Cache for subject data
-subject_data_cache = None
+@st.cache_data
+def load_data(url):
+    df = pd.read_csv(url, storage_options={"Authorization": b"Basic " + base64.b64encode(f"{xnat_user}:{xnat_password}".encode())})
+    return df
 
-# Compile subject data or return cached data
+@st.cache_data
 def get_subject_data():
-    global subject_data_cache
-    
-    if subject_data_cache is not None:
-        return subject_data_cache
-    
-    subject_data = {
-        'id': [],
-        'gender': [],
-        'age': []
-    }
-
-    for subject in project.subjects.values():
-        subject_data['id'].append(subject.label)
-        subject_data['gender'].append(subject.demographics.gender)
-        subject_data['age'].append(subject.demographics.age)
-        
-    df = pandas.DataFrame(subject_data)
-    
-    subject_data_cache = df
-
+    url = f"{xnat_host}/data/projects/{project_id}/subjects?format=csv&columns=age,gender"
+    df = load_data(url)
+    df = df.drop(columns=['URI'])
     return df
 
 # Start Streamlit
-
 st.title(f"Subject demographics for project {project_id}")
 
 st.write("This is a demo of a Streamlit app that shows subject demographics for a project in XNAT.")
