@@ -2,6 +2,7 @@ import panel as pn
 import os 
 import pandas as pd
 import xnat
+import base64
 
 import plotly.express as px
 import hvplot.pandas
@@ -18,20 +19,15 @@ project_id = os.environ['XNAT_ITEM_ID']
 connection = xnat.connect(xnat_host, user=xnat_user, password=xnat_password, loglevel='INFO')
 project = connection.projects[project_id]
 
+def load_data(url):
+    df = pd.read_csv(url, storage_options={"Authorization": b"Basic " + base64.b64encode(f"{xnat_user}:{xnat_password}".encode())})
+    return df
+
 def load_subject_data():
-
-    subject_data = {
-        'id': [],
-        'gender': [],
-        'age': []
-    }
-
-    for subject in project.subjects.values():
-        subject_data['id'].append(subject.label)
-        subject_data['gender'].append(subject.demographics.gender)
-        subject_data['age'].append(subject.demographics.age)
-
-    return subject_data
+    url = f"{xnat_host}/data/projects/{project_id}/subjects?format=csv&columns=age,gender"
+    df = load_data(url)
+    df = df.drop(columns=['URI'])
+    return df
 
 container = pn.Column()
 
@@ -53,8 +49,6 @@ inner.append(loading)
 container.append(inner)
 
 def display_subject_data():
-
-    # subject_data = load_subject_data()
 
     loading.object = "Loading subject data..."
 
